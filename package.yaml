@@ -21,6 +21,17 @@ description:         Please see the README on GitHub at <https://github.com/gith
 
 dependencies:
 - base >= 4.7 && < 5
+- process
+- text
+- shelly
+- time
+- safe-money
+- cassava
+- bytestring
+
+default-extensions:
+  - OverloadedStrings
+  - ExtendedDefaultRules
 
 library:
   source-dirs: src
@@ -33,6 +44,7 @@ executables:
     - -threaded
     - -rtsopts
     - -with-rtsopts=-N
+    - -fno-warn-type-defaults 
     dependencies:
     - statement
 
@@ -44,5 +56,6 @@ tests:
     - -threaded
     - -rtsopts
     - -with-rtsopts=-N
+    - -fno-warn-type-defaults 
     dependencies:
     - statement

@@ -1,6 +1,6 @@
 module Main where
 
-import Lib
+import Converter.PDFToCSV
 
 main :: IO ()
-main = someFunc
+main = go
