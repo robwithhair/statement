@@ -5,5 +5,8 @@ All of the above banks support only the last 6 months of statement downloading i
 
 Usage of this tool is free to all except banks, where a licence fee is negotiable on request.  Pull request welcome.
 
+## Installation
 Statement requires the command line utility pdftotext to be installed.  It is built and installed using Haskell Stack.  See Haskell Stack documentation for installation steps.
 
+## Usage
+Usage is simple.  run `statement-exe *.pdf` to print all pdf files in the current directory to standard output for testing.  To save to a file run `statement-exe *.pdf > test.csv`
