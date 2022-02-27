@@ -128,15 +128,17 @@ altDateFormat = "%d %b %y"
 exitCode :: TVar ExitCode
 exitCode = unsafePerformIO $ newTVarIO ExitSuccess
 
-partialFailure :: Int -> String -> IO ()
-partialFailure exitInt errorMessage = do
+partialFailure :: Maybe Int -> String -> IO ()
+partialFailure newExit errorMessage = do
   hPutStrLn stderr errorMessage
-  atomically $ do
-    lastValue <- readTVar exitCode
-    writeTVar exitCode $ case lastValue of
-      ExitSuccess                 -> ExitFailure exitInt
-      ExitFailure x | x < exitInt -> ExitFailure x
-      _                           -> ExitFailure exitInt
+  case newExit of
+    Nothing -> return ()
+    Just exitInt -> atomically $ do
+            lastValue <- readTVar exitCode
+            writeTVar exitCode $ case lastValue of
+              ExitSuccess                 -> ExitFailure exitInt
+              ExitFailure x | x < exitInt -> ExitFailure x
+              _                           -> ExitFailure exitInt
 
 processFile :: PDFToText -> FilePath -> IO [[Text]]
 processFile pdfToText file = do
@@ -150,8 +152,8 @@ processFile pdfToText file = do
       when (null res) $ possibleWarning ("Decoded zero transactions for statement file: " ++ file)
       return res
   where processFileForInstitution' = processFileForInstitution pdfToText file
-        possibleError = partialFailure 1 . (++) "Error: "
-        possibleWarning = partialFailure 2 . (++) "Warning: "
+        possibleError = partialFailure (Just 1) . (++) "Error: "
+        possibleWarning = partialFailure Nothing . (++) "Warning: "
 
 processFileForInstitution :: PDFToText -> FilePath -> Institution -> Day -> IO [[Text]]
 processFileForInstitution pdfToText file institution statementDate = do
