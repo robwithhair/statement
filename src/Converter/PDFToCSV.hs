@@ -131,7 +131,12 @@ exitCode = unsafePerformIO $ newTVarIO ExitSuccess
 partialFailure :: Int -> String -> IO ()
 partialFailure exitInt errorMessage = do
   hPutStrLn stderr errorMessage
-  atomically $ writeTVar exitCode $ ExitFailure exitInt
+  atomically $ do
+    lastValue <- readTVar exitCode
+    writeTVar exitCode $ case lastValue of
+      ExitSuccess                 -> ExitFailure exitInt
+      ExitFailure x | x < exitInt -> ExitFailure x
+      _                           -> ExitFailure exitInt
 
 processFile :: PDFToText -> FilePath -> IO [[Text]]
 processFile pdfToText file = do
