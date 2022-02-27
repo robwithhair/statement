@@ -160,7 +160,7 @@ processFileForInstitution pdfToText file institution statementDate = do
   res <- shelly $ silently $ runFoldLines [] f pdfToText args
   let institutionWindowArgs = pdfToTextWindowOptions <$> transactionsWindowArgs institution
   case (res, institutionWindowArgs) of
-      ([], Just newArgs) -> shelly $ runFoldLines [] f pdfToText $ newArgs ++ args
+      ([], Just newArgs) -> shelly $ silently $ runFoldLines [] f pdfToText $ newArgs ++ args
       (_, _) -> return res
   where args = ["-layout", T.pack file, "-"]
         f lastArray thisLine
