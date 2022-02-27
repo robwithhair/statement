@@ -128,21 +128,25 @@ altDateFormat = "%d %b %y"
 exitCode :: TVar ExitCode
 exitCode = unsafePerformIO $ newTVarIO ExitSuccess
 
-partialFailure :: String -> IO ()
-partialFailure errorMessage = do
+partialFailure :: Int -> String -> IO ()
+partialFailure exitInt errorMessage = do
   hPutStrLn stderr errorMessage
-  atomically $ writeTVar exitCode $ ExitFailure 1
+  atomically $ writeTVar exitCode $ ExitFailure exitInt
 
 processFile :: PDFToText -> FilePath -> IO [[Text]]
 processFile pdfToText file = do
   maybeInstitution <- getInstitution pdfToText file False
   case maybeInstitution of
-    (Nothing, Nothing) -> partialFailure ("Was unable to detect institution or statement date for file: " ++ file) >> return [[]]
-    (Nothing, _) -> partialFailure ("Was unable to detect institution for file: " ++ file) >> return [[]]
-    (_, Nothing) -> partialFailure ("Was unable to detect statementDate for file: " ++ file) >> return [[]]
+    (Nothing, Nothing) -> possibleError ("Was unable to detect institution or statement date for file: " ++ file) >> return [[]]
+    (Nothing, _) -> possibleError ("Was unable to detect institution for file: " ++ file) >> return [[]]
+    (_, Nothing) -> possibleError ("Was unable to detect statementDate for file: " ++ file) >> return [[]]
     (Just institution, Just statementDate) -> do
-      processFileForInstitution' institution statementDate
+      res <- processFileForInstitution' institution statementDate
+      when (null res) $ possibleWarning ("Decoded zero transactions for statement file: " ++ file)
+      return res
   where processFileForInstitution' = processFileForInstitution pdfToText file
+        possibleError = partialFailure 1 . (++) "Error: "
+        possibleWarning = partialFailure 2 . (++) "Warning: "
 
 processFileForInstitution :: PDFToText -> FilePath -> Institution -> Day -> IO [[Text]]
 processFileForInstitution pdfToText file institution statementDate = do
